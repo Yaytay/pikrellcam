@@ -909,6 +909,13 @@ static Config  config[] =
 	  "# be Pi header gpio numbers but instead should be one of the ServoBlaster\n"
 	  "# documented servo numbers 0 - 7.  See ServoBlaster documentation.\n"
 	  "# \n"
+	  "# Or, PiKrellCam can use the Adafruit ServoHat and will then send servo\n"
+          "# commands via i2c.\n"
+	  "# For the ServoHat the PiKrellCam servo pan/tilt gpio values shluld not\n"
+	  "# be Pi header gpio numbers but instead should be the PWM channel on the\n"
+	  "# ServoHat (0-15).\n"
+	  "# \n"
+	  "# \n"
 	  "# Leave the gpios at -1 if not using servos.\n"
 	  "#",
 	"servo_pan_gpio", "-1", FALSE, {.value = &pikrellcam.servo_pan_gpio}, config_value_int_set },
@@ -919,7 +926,11 @@ static Config  config[] =
 	{ "# Set to true to use ServoBlaster for servos.  A separate install of\n"
 	  "# ServoBlaster will be required.\n"
 	  "#",
-	"servo_use_servoblaster",  "false", TRUE, {.value = &pikrellcam.servo_use_servoblaster }, config_value_bool_set },
+        "servo_use_servoblaster",  "false", TRUE, {.value = &pikrellcam.servo_use_servoblaster }, config_value_bool_set },
+
+	{ "# Set to true to use Adafruit ServoHat for servos.\n"
+	  "#",
+	"servo_use_adafruitservohat",  "false", TRUE, {.value = &pikrellcam.servo_use_servohat }, config_value_bool_set },
 
 	{ "# pan/tilt min/max values are best set using the web OSD.\n"
 	  "# The value units are 0.01 msec, so for example, a servo_pan_min of\n"
@@ -960,6 +971,10 @@ static Config  config[] =
 	{ "# Delay in msec after servo stops moving before enabling motion detection.\n"
 	  "#",
 	"servo_settle_msec",  "600", FALSE, {.value = &pikrellcam.servo_settle_msec }, config_value_int_set },
+
+	{ "# ServoHat i2c address.\n"
+	  "#",
+	"servo_hat_i2c_address",  "0x40", FALSE, {.value = &pikrellcam.servo_hat_i2c_address }, config_value_int_set },
 
 
 	{ "\n# ------------------- Miscellaneous Options  -----------------------\n"
@@ -1189,7 +1204,8 @@ config_load(char *config_file)
 	motion_times_temp = pikrellcam.motion_times;
 
 	if (   (pikrellcam.servo_use_servoblaster && pikrellcam.servo_pan_gpio >= 0)
-	    || (   !pikrellcam.servo_use_servoblaster
+            || (pikrellcam.servo_use_servohat && pikrellcam.servo_pan_gpio >= 0)
+	    || (   !pikrellcam.servo_use_servoblaster && !pikrellcam.servo_use_servohat
 	        && (   pikrellcam.servo_pan_gpio == 12 || pikrellcam.servo_pan_gpio == 13
 	            || pikrellcam.servo_pan_gpio == 18 || pikrellcam.servo_pan_gpio == 19
 	           )

@@ -584,11 +584,13 @@ typedef struct
 			servo_preset_step_msec,
 			servo_move_step_msec,
 			servo_move_steps,
-			servo_settle_msec;
+			servo_settle_msec,
+			servo_hat_i2c_address;
 	boolean	servo_pan_invert,
 			servo_tilt_invert,
 			servo_moving,
 			servo_use_servoblaster,
+			servo_use_servohat,
 			have_servos;
 
 	SList	*preset_position_list;

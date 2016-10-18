@@ -1421,6 +1421,12 @@ main(int argc, char *argv[])
 		servo_init();
 		log_start(FALSE, FALSE, TRUE);
 		}
+        else if (pikrellcam.servo_use_servohat)
+                {
+		log_start(TRUE, TRUE,FALSE);
+		servo_init();
+		log_start(FALSE, FALSE, TRUE);
+                }
 	else
 		log_start(TRUE, TRUE, TRUE);
 
