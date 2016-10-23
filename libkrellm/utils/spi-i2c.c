@@ -17,8 +17,6 @@
 |
 */
 
-#ifdef HAVE_WIRINGPI
-
 #include <stdio.h>
 #include <errno.h>
 #include <sys/fcntl.h>
@@ -27,9 +25,11 @@
 #include <linux/i2c-dev.h>
 #include <linux/spi/spidev.h>
 
-#include "wiringPi.h"
-
 #include "utils.h"
+
+#ifdef HAVE_WIRINGPI
+
+#include "wiringPi.h"
 
 
 static uint8_t	spi_mode	= 0,
@@ -183,15 +183,13 @@ spi_rw(SpiDevice *spidev, int demux_BA, uint8_t *data, int length)
 	return TRUE;
 	}
 
+#endif /*  HAVE_WIRINGPI */
 
 
 int
-i2c_open(int i2c_address)
+i2c_open(char * device, int i2c_address)
 	{
 	int 	fd;
-	char	*device;
-
-	device = (pi_board_rev() == 1) ? "/dev/i2c-0" : "/dev/i2c-1";
 
 	if ((fd = open(device, O_RDWR)) < 0)
 		{
@@ -208,4 +206,3 @@ i2c_open(int i2c_address)
 	}
 
 
-#endif /*  HAVE_WIRINGPI */

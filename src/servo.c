@@ -1,4 +1,3 @@
-
 /* PiKrellCam
 |
 |  Copyright (C) 2015-2016 Bill Wilson    billw@gkrellm.net
@@ -117,8 +116,9 @@ static void	(*pwm_width_func)(int channel, int width, boolean invert);
 
 static FILE *fblaster;
 
+static PCA9685 *pca9685;
+static char *i2c_device;
 static int hat_i2c_address;
-static int fdservohat = 0;
 
 static float	pan_cur = 150.0,
 				tilt_cur = 150.0;
@@ -182,23 +182,10 @@ pwm_width_servoblaster(int channel, int width, boolean invert)
 void
 pwm_width_servohat(int channel, int width, boolean invert)
 	{
-        if (!fdservohat)
+        if (!pca9685)
                 {
-                fdservohat = wiringPiI2CSetup(hat_i2c_address);
-
-                printf("Opened: %d\n", fdservohat);
-                int mode = wiringPiI2CReadReg8(fdservohat, PCA9685_MODE1);
-                printf("Mode: 0x%0X\n", mode);
-                wiringPiI2CWriteReg8(fdservohat, PCA9685_MODE1, PCA9685_AI );
-                wiringPiI2CWriteReg8(fdservohat, PCA9685_MODE2, PCA9685_OCH | PCA9685_OUTDRV );
-                usleep(500);
-                mode = wiringPiI2CReadReg8(fdservohat, PCA9685_MODE1);
-                printf("Mode: 0x%0X\n", mode);
-                wiringPiI2CWriteReg8(fdservohat, PCA9685_MODE1, mode & PCA9685_SLEEP); // MODE1 - ~SLEEP
-                wiringPiI2CWriteReg8(fdservohat, PCA9685_PRESCALE, 121); // PRESCALE, 50Hz
-                wiringPiI2CWriteReg8(fdservohat, PCA9685_MODE1, mode & ~PCA9685_SLEEP); // MODE1 - ~SLEEP
-                usleep(500);
-
+                pca9685 = pca9685_setup(i2c_device, hat_i2c_address);
+                pca9685_set_modulation_frequency(pca9685, 50);
                 printf("ServoHat ready\n");
                 }
         if (invert)
@@ -212,10 +199,7 @@ pwm_width_servohat(int channel, int width, boolean invert)
         printf("Ticksize: %g", ticksize);
         int ticks = width / ( 100 * ticksize );
         printf("Setting %d to: %d (%d)\n", channel, width, ticks);
-        wiringPiI2CWriteReg8(fdservohat, PCA9685_LED0_ON_L+4*channel, 0);
-        wiringPiI2CWriteReg8(fdservohat, PCA9685_LED0_ON_H+4*channel, 0);
-        wiringPiI2CWriteReg8(fdservohat, PCA9685_LED0_OFF_L+4*channel, ticks & 0xFF);
-        wiringPiI2CWriteReg8(fdservohat, PCA9685_LED0_OFF_H+4*channel, ticks >> 8);
+        pca9685_set_PWM(pca9685, channel, 0, ticks);
 
 	}
 
@@ -493,6 +477,7 @@ servo_init(void)
 		pan_channel = pikrellcam.servo_pan_gpio;
 		tilt_channel = pikrellcam.servo_tilt_gpio;
 		pthread_create (&servo_thread_ref, NULL, servo_thread, NULL);
+                i2c_device = (pi_model() == 1) ? "/dev/i2c-0" : "/dev/i2c-1";
 		log_printf_no_timestamp("======= Servo using ServoBlaster (%d %d)\n",
 						pan_channel, tilt_channel);
 		return;

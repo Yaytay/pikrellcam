@@ -81,7 +81,7 @@ boolean		spi_rw(SpiDevice *spidev, int demux_BA,
 						uint8_t *data, int length);
 
 
-int		i2c_open(int i2c_address);
+int		i2c_open(char *device, int i2c_address);
 
 
 void	slist_free(SList *list);
